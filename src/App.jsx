@@ -1,16 +1,26 @@
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import IngredientInput from './components/IngredientInput'
 import IngredientList from './components/IngredientList'
 import RecipeDetails from './components/RecipeDetails'
 
 function App() {
-  const [ingredients, setIngredients] = useState([])
+  const [ingredients, setIngredients] = useState(() => {
+    const savedIngredients = localStorage.getItem('ingredients')
+
+    return savedIngredients ? JSON.parse(savedIngredients) : []
+  })
+
   const [recipes, setRecipes] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [loadingRecipe, setLoadingRecipe] = useState(false)
+
+  useEffect(() => {
+    localStorage.setItem('ingredients', JSON.stringify(ingredients))
+  }, [ingredients])
+
 
   const handleAddIngredient = (newIngredient) => {
     const alreadyExists = ingredients.some(
@@ -110,6 +120,7 @@ function App() {
       setLoadingRecipe(false)
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-green-50 p-6">
