@@ -1,16 +1,22 @@
 
 import { useState } from 'react'
 
-function IngredientInput() {
+function IngredientInput({ onAddIngredient }) {
   const [ingredient, setIngredient] = useState('')
 
-  const handleAddIngredient = () => {
-    console.log(ingredient)
+  const handleAddIngredient = (event) => {
+    event.preventDefault()
+
+    const trimmedIngredient = ingredient.trim()
+
+    if (!trimmedIngredient) return
+
+    onAddIngredient(trimmedIngredient)
     setIngredient('')
   }
 
   return (
-    <div className="flex gap-2">
+    <form onSubmit={handleAddIngredient} className="flex gap-2">
       <input
         type="text"
         placeholder="Enter an ingredient..."
@@ -20,12 +26,12 @@ function IngredientInput() {
       />
 
       <button
-        onClick={handleAddIngredient}
-        className="rounded-lg bg-green-600 px-5 py-2 text-white transition hover:bg-green-700"
+        type="submit"
+        className="cursor-pointer rounded-lg bg-green-600 px-5 py-2 text-white transition hover:bg-green-700"
       >
         Add
       </button>
-    </div>
+    </form>
   )
 }
 
