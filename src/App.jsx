@@ -41,6 +41,10 @@ function App() {
     )
   }
 
+  const handleClearIngredients = () => {
+    setIngredients([])
+  }
+
   const handleSearchRecipes = async () => {
     if (ingredients.length === 0) return
 
@@ -154,6 +158,16 @@ function App() {
           onRemoveIngredient={handleRemoveIngredient}
         />
 
+        {ingredients.length > 0 && (
+          <div className="mt-3 flex justify-center">
+            <button
+              onClick={handleClearIngredients}
+              className="cursor-pointer text-sm font-medium text-red-500 transition hover:text-red-700"
+            >
+              Clear All
+            </button>
+          </div>
+        )}
       </div>
 
       {error && (
