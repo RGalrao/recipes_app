@@ -122,21 +122,27 @@ function App() {
         Find recipes with the ingredients you have at home.
       </p>
 
-      <div className="mt-8 w-full max-w-lg">
-        <IngredientInput onAddIngredient={handleAddIngredient} />
+      <div className="mt-8 w-full max-w-4xl">
+
+        <div className="mx-auto w-full max-w-lg">
+          <IngredientInput onAddIngredient={handleAddIngredient} />
+
+          <div className="flex justify-center">
+            <button
+              onClick={handleSearchRecipes}
+              disabled={ingredients.length === 0 || loading}
+              className="mt-6 w-full cursor-pointer rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? 'Searching...' : 'Find Recipes'}
+            </button>
+          </div>
+        </div>
 
         <IngredientList
           ingredients={ingredients}
           onRemoveIngredient={handleRemoveIngredient}
         />
 
-        <button
-          onClick={handleSearchRecipes}
-          disabled={ingredients.length === 0 || loading}
-          className="mt-6 w-full cursor-pointer rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? 'Searching...' : 'Find Recipes'}
-        </button>
       </div>
 
       {error && (

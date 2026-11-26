@@ -1,37 +1,28 @@
 
 function IngredientList({ ingredients, onRemoveIngredient }) {
   return (
-    <div className="mt-6 w-full">
-
-      <h2 className="text-lg font-semibold text-gray-700">
-        Your ingredients: ({ingredients.length} ingredient{ingredients.length !== 1 && 's'})
-      </h2>
+    <div className="mt-6 w-full ">
+      <h3 className="mb-3 text-center font-semibold text-gray-700">
+        Your ingredients: {ingredients.length}
+      </h3>
 
       {ingredients.length === 0 ? (
-        <p className="mt-3 text-sm text-gray-500">
-          No ingredients added yet. Start by adding some!
+        <p className="text-center text-sm text-gray-500">
+          No ingredients added yet.
         </p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <div className="flex justify-center flex-wrap gap-2">
           {ingredients.map((ingredient, index) => (
-            <li
+            <button
               key={`${ingredient}-${index}`}
-              className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm"
+              onClick={() => onRemoveIngredient(index)}
+              title="Click to remove"
+              className="cursor-pointer rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-800 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
             >
-              <span className="text-gray-700">
-                {ingredient}
-              </span>
-
-              <button
-                onClick={() => onRemoveIngredient(index)}
-                aria-label={`Remove ${ingredient}`}
-                className="cursor-pointer flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-50 hover:text-red-700"
-              >
-                ✕
-              </button>
-            </li>
+              {ingredient}
+            </button>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )
