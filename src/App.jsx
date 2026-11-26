@@ -39,22 +39,47 @@ function App() {
     setRecipes([])
 
     try {
-      const ingredient = ingredients[0].trim().replaceAll(' ', '_')
-
-      const response = await fetch(
-        `https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(ingredient)}`
+      const ingredientQueries = ingredients.map((ingredient) =>
+        ingredient.trim().replaceAll(' ', '_')
       )
 
-      if (!response.ok) {
-        throw new Error('Something went wrong while fetching recipes.')
-      }
+      const responses = await Promise.all(
+        ingredientQueries.map((ingredient) =>
+          fetch(
+            `https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(ingredient)}`
+          )
+        )
+      )
 
-      const data = await response.json()
+      const results = await Promise.all(
+        responses.map((response) => response.json())
+      )
 
-      setRecipes(data.meals ?? [])
+      const recipeMatches = {}
 
-      if (!data.meals) {
-        setError('No recipes found for this ingredient.')
+      results.forEach((result) => {
+        (result.meals ?? []).forEach((recipe) => {
+
+          if (!recipeMatches[recipe.idMeal]) {
+            recipeMatches[recipe.idMeal] = {
+              ...recipe,
+              matchCount: 0,
+            }
+          }
+
+          recipeMatches[recipe.idMeal].matchCount += 1
+
+        })
+      })
+
+      const sortedRecipes = Object.values(recipeMatches).sort(
+        (a, b) => b.matchCount - a.matchCount
+      )
+
+      setRecipes(sortedRecipes)
+
+      if (sortedRecipes.length === 0) {
+        setError('No recipes found for your ingredients.')
       }
 
     } catch (error) {
@@ -80,9 +105,9 @@ function App() {
 
     } catch (error) {
       console.error(error)
-    
+
     } finally {
-    setLoadingRecipe(false)
+      setLoadingRecipe(false)
     }
   }
 
@@ -138,22 +163,24 @@ function App() {
                   {recipe.strMeal}
                 </h3>
 
-                <button
-                  onClick={() => {
-                    if (selectedRecipe?.idMeal === recipe.idMeal) {
-                      setSelectedRecipe(null)
-                    } else {
-                      handleViewRecipe(recipe.idMeal)
-                    }
-                  }}
-                  className="cursor-pointer mt-3 rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-                >
-                  {loadingRecipe && selectedRecipe?.idMeal === recipe.idMeal
-                    ? 'Loading...'
-                    : selectedRecipe?.idMeal === recipe.idMeal
-                      ? 'Hide Recipe'
-                      : 'View Recipe'}
-                </button>
+                <p className="mt-1 text-sm font-medium text-green-600">
+                  {recipe.matchCount}/{ingredients.length} matches
+                </p>
+
+                <div className="mt-3 flex items-center justify-between gap-2">
+
+                  <span className="text-sm text-black">
+                    {recipe.strArea}
+                  </span>
+
+                  <button
+                    onClick={() => handleViewRecipe(recipe.idMeal)}
+                    className="cursor-pointer rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                  >
+                    View Recipe
+                  </button>
+
+                </div>
 
               </div>
 
@@ -161,7 +188,7 @@ function App() {
           ))}
         </div>
       )}
-      
+
       {selectedRecipe && (
         <div className="mt-8 w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-lg">
 
@@ -173,11 +200,20 @@ function App() {
 
           <div className="p-6">
 
-            <h2 className="text-2xl font-bold text-green-700">
-              {selectedRecipe.strMeal}
-            </h2>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold text-green-700">
+                {selectedRecipe.strMeal}
+              </h2>
 
-            <RecipeDetails meal={selectedRecipe} />
+              <span className="text-sm text-black">
+                {selectedRecipe.strArea}
+              </span>
+            </div>
+
+            <RecipeDetails
+              meal={selectedRecipe}
+              availableIngredients={ingredients}
+            />
 
             <button
               onClick={() => setSelectedRecipe(null)}
