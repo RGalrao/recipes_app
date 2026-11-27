@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+.ingredient-grid {
+  scrollbar-width: none;
+}
+
+.ingredient-grid::-webkit-scrollbar {
+  display: none;
+}

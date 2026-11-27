@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import IngredientInput from './components/IngredientInput'
 import IngredientList from './components/IngredientList'
 import RecipeDetails from './components/RecipeDetails'
+import IngredientSelector from './components/IngredientSelector'
 
 function App() {
   const [ingredients, setIngredients] = useState(() => {
@@ -26,8 +27,28 @@ function App() {
   const [error, setError] = useState('')
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [loadingRecipe, setLoadingRecipe] = useState(false)
-
   const [activeTab, setActiveTab] = useState('search')
+  const [availableIngredients, setAvailableIngredients] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      try {
+        const response = await fetch(
+          'https://www.themealdb.com/api/json/v1/1/list.php?i=list'
+        )
+
+        const data = await response.json()
+
+        setAvailableIngredients(data.meals ?? [])
+
+      } catch (error) {
+        console.error('Unable to load ingredients:', error)
+      }
+    }
+
+    fetchIngredients()
+  }, [])
 
   useEffect(() => {
     localStorage.setItem('ingredients', JSON.stringify(ingredients))
@@ -70,6 +91,7 @@ function App() {
 
     fetchFavoriteDetails()
   }, [favoriteRecipes])
+
   const handleAddIngredient = (newIngredient) => {
     const alreadyExists = ingredients.some(
       (ingredient) =>
@@ -79,6 +101,22 @@ function App() {
     if (alreadyExists) return
 
     setIngredients([...ingredients, newIngredient])
+  }
+
+  const handleToggleIngredient = (ingredient) => {
+    setIngredients((previousIngredients) => {
+      const isAlreadySelected = previousIngredients.some(
+        (item) => item.toLowerCase() === ingredient.toLowerCase()
+      )
+
+      if (isAlreadySelected) {
+        return previousIngredients.filter(
+          (item) => item.toLowerCase() !== ingredient.toLowerCase()
+        )
+      }
+
+      return [...previousIngredients, ingredient]
+    })
   }
 
   const handleRemoveIngredient = (indexToRemove) => {
@@ -222,8 +260,21 @@ function App() {
         <div className="mt-8 w-full max-w-4xl">
 
 
-          <div className="mx-auto w-full max-w-lg">
-            <IngredientInput onAddIngredient={handleAddIngredient} />
+          <div className="mx-auto w-full max-w-4xl">
+            <IngredientSelector
+              availableIngredients={availableIngredients}
+              ingredients={ingredients}
+              onAddIngredient={handleToggleIngredient}
+              searchTerm={searchTerm}
+            />
+
+            <div className="mx-auto mt-4 w-full max-w-lg">
+              <IngredientInput
+                onAddIngredient={handleAddIngredient}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+              />
+            </div>
 
             <div className="flex justify-center">
               <button

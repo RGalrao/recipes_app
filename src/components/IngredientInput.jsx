@@ -1,27 +1,24 @@
 
-import { useState } from 'react'
-
-function IngredientInput({ onAddIngredient }) {
-  const [ingredient, setIngredient] = useState('')
+function IngredientInput({ onAddIngredient, searchTerm, onSearchChange }) {
 
   const handleAddIngredient = (event) => {
     event.preventDefault()
 
-    const trimmedIngredient = ingredient.trim()
+    const trimmedIngredient = searchTerm.trim()
 
     if (!trimmedIngredient) return
 
     onAddIngredient(trimmedIngredient)
-    setIngredient('')
+    onSearchChange('')
   }
 
   return (
     <form onSubmit={handleAddIngredient} className="flex gap-2">
       <input
         type="text"
-        placeholder="Enter an ingredient..."
-        value={ingredient}
-        onChange={(event) => setIngredient(event.target.value)}
+        placeholder="Search or add an ingredient..."
+        value={searchTerm}
+        onChange={(event) => onSearchChange(event.target.value)}
         className="flex-1 rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
       />
 
