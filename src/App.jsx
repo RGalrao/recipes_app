@@ -1,32 +1,32 @@
 
 import { useState, useEffect } from 'react'
-import Navbar from './components/layout/NavBar'
-import { fetchIngredients, searchRecipes, fetchRecipeDetails, fetchFavoriteRecipes } from './services/mealApi'
+import { fetchIngredients, searchRecipes, fetchRecipeDetails } from './services/mealApi'
+import Navbar from './components/layout/Navbar'
 import IngredientInput from './components/ingredients/IngredientInput'
 import IngredientList from './components/ingredients/IngredientList'
 import IngredientSelector from './components/ingredients/IngredientSelector'
 import RecipeDetails from './components/recipes/RecipeDetails'
 import RecipeCard from './components/recipes/RecipeCard'
-
+import useIngredients from './hooks/useIngredients'
+import useFavorites from './hooks/useFavorites'
 
 function App() {
-  const [ingredients, setIngredients] = useState(() => {
-    const savedIngredients = localStorage.getItem('ingredients')
 
-    return savedIngredients ? JSON.parse(savedIngredients) : []
-  })
+  const {
+    ingredients,
+    handleAddIngredient,
+    handleToggleIngredient,
+    handleRemoveIngredient,
+    handleClearIngredients,
+  } = useIngredients()
+
+  const {
+    favoriteRecipes,
+    favoriteRecipeDetails,
+    handleToggleFavorite,
+  } = useFavorites()
 
   const [recipes, setRecipes] = useState([])
-
-  const [favoriteRecipes, setFavoriteRecipes] = useState(() => {
-    const savedFavorites = localStorage.getItem('favorites')
-
-    return savedFavorites ? JSON.parse(savedFavorites) : []
-  })
-
-  const [favoriteRecipeDetails, setFavoriteRecipeDetails] = useState([])
-
-
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedRecipe, setSelectedRecipe] = useState(null)
@@ -48,90 +48,6 @@ function App() {
 
     loadIngredients()
   }, [])
-
-
-  useEffect(() => {
-    localStorage.setItem('ingredients', JSON.stringify(ingredients))
-  }, [ingredients])
-
-
-  useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favoriteRecipes))
-  }, [favoriteRecipes])
-
-
-  useEffect(() => {
-    const loadFavoriteDetails = async () => {
-      if (favoriteRecipes.length === 0) {
-        setFavoriteRecipeDetails([])
-        return
-      }
-
-      try {
-        const favoriteMeals = await fetchFavoriteRecipes(favoriteRecipes)
-
-        setFavoriteRecipeDetails(favoriteMeals)
-      } catch (error) {
-        console.error('Unable to load favorite recipes:', error)
-      }
-    }
-
-    loadFavoriteDetails()
-  }, [favoriteRecipes])
-
-
-  const handleAddIngredient = (newIngredient) => {
-    const alreadyExists = ingredients.some(
-      (ingredient) =>
-        ingredient.toLowerCase() === newIngredient.toLowerCase()
-    )
-
-    if (alreadyExists) return
-
-    setIngredients([...ingredients, newIngredient])
-  }
-
-
-  const handleToggleIngredient = (ingredient) => {
-    setIngredients((previousIngredients) => {
-      const isAlreadySelected = previousIngredients.some(
-        (item) => item.toLowerCase() === ingredient.toLowerCase()
-      )
-
-      if (isAlreadySelected) {
-        return previousIngredients.filter(
-          (item) => item.toLowerCase() !== ingredient.toLowerCase()
-        )
-      }
-
-      return [...previousIngredients, ingredient]
-    })
-  }
-
-
-  const handleRemoveIngredient = (indexToRemove) => {
-    setIngredients((previousIngredients) =>
-      previousIngredients.filter(
-        (_, index) => index !== indexToRemove
-      )
-    )
-  }
-
-
-  const handleClearIngredients = () => {
-    setIngredients([])
-  }
-
-
-  const handleToggleFavorite = (recipeId) => {
-    setFavoriteRecipes((previousFavorites) => {
-      if (previousFavorites.includes(recipeId)) {
-        return previousFavorites.filter((id) => id !== recipeId)
-      }
-
-      return [...previousFavorites, recipeId]
-    })
-  }
 
 
   const handleSearchRecipes = async () => {
