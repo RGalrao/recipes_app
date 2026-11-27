@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react'
-import IngredientInput from './components/IngredientInput'
-import IngredientList from './components/IngredientList'
-import RecipeDetails from './components/RecipeDetails'
-import IngredientSelector from './components/IngredientSelector'
+import { fetchIngredients, searchRecipes, fetchRecipeDetails, fetchFavoriteRecipes } from './services/mealApi'
+import IngredientInput from './components/ingredients/IngredientInput'
+import IngredientList from './components/ingredients/IngredientList'
+import RecipeDetails from './components/recipes/RecipeDetails'
+import IngredientSelector from './components/ingredients/IngredientSelector'
 
 function App() {
   const [ingredients, setIngredients] = useState(() => {
@@ -31,66 +32,50 @@ function App() {
   const [availableIngredients, setAvailableIngredients] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
 
+
   useEffect(() => {
-    const fetchIngredients = async () => {
+    const loadIngredients = async () => {
       try {
-        const response = await fetch(
-          'https://www.themealdb.com/api/json/v1/1/list.php?i=list'
-        )
-
-        const data = await response.json()
-
-        setAvailableIngredients(data.meals ?? [])
-
+        const data = await fetchIngredients()
+        setAvailableIngredients(data)
       } catch (error) {
         console.error('Unable to load ingredients:', error)
       }
     }
 
-    fetchIngredients()
+    loadIngredients()
   }, [])
+
 
   useEffect(() => {
     localStorage.setItem('ingredients', JSON.stringify(ingredients))
   }, [ingredients])
 
+
   useEffect(() => {
     localStorage.setItem('favorites', JSON.stringify(favoriteRecipes))
   }, [favoriteRecipes])
 
+
   useEffect(() => {
-    const fetchFavoriteDetails = async () => {
+    const loadFavoriteDetails = async () => {
       if (favoriteRecipes.length === 0) {
         setFavoriteRecipeDetails([])
         return
       }
 
       try {
-        const responses = await Promise.all(
-          favoriteRecipes.map((recipeId) =>
-            fetch(
-              `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${recipeId}`
-            )
-          )
-        )
-
-        const results = await Promise.all(
-          responses.map((response) => response.json())
-        )
-
-        const favoriteMeals = results
-          .map((result) => result.meals?.[0])
-          .filter(Boolean)
+        const favoriteMeals = await fetchFavoriteRecipes(favoriteRecipes)
 
         setFavoriteRecipeDetails(favoriteMeals)
-
       } catch (error) {
         console.error('Unable to load favorite recipes:', error)
       }
     }
 
-    fetchFavoriteDetails()
+    loadFavoriteDetails()
   }, [favoriteRecipes])
+
 
   const handleAddIngredient = (newIngredient) => {
     const alreadyExists = ingredients.some(
@@ -102,6 +87,7 @@ function App() {
 
     setIngredients([...ingredients, newIngredient])
   }
+
 
   const handleToggleIngredient = (ingredient) => {
     setIngredients((previousIngredients) => {
@@ -119,6 +105,7 @@ function App() {
     })
   }
 
+
   const handleRemoveIngredient = (indexToRemove) => {
     setIngredients((previousIngredients) =>
       previousIngredients.filter(
@@ -127,9 +114,11 @@ function App() {
     )
   }
 
+
   const handleClearIngredients = () => {
     setIngredients([])
   }
+
 
   const handleToggleFavorite = (recipeId) => {
     setFavoriteRecipes((previousFavorites) => {
@@ -141,6 +130,7 @@ function App() {
     })
   }
 
+
   const handleSearchRecipes = async () => {
     if (ingredients.length === 0) return
 
@@ -149,73 +139,31 @@ function App() {
     setRecipes([])
 
     try {
-      const ingredientQueries = ingredients.map((ingredient) =>
-        ingredient.trim().replaceAll(' ', '_')
-      )
-
-      const responses = await Promise.all(
-        ingredientQueries.map((ingredient) =>
-          fetch(
-            `https://www.themealdb.com/api/json/v1/1/filter.php?i=${encodeURIComponent(ingredient)}`
-          )
-        )
-      )
-
-      const results = await Promise.all(
-        responses.map((response) => response.json())
-      )
-
-      const recipeMatches = {}
-
-      results.forEach((result) => {
-        (result.meals ?? []).forEach((recipe) => {
-
-          if (!recipeMatches[recipe.idMeal]) {
-            recipeMatches[recipe.idMeal] = {
-              ...recipe,
-              matchCount: 0,
-            }
-          }
-
-          recipeMatches[recipe.idMeal].matchCount += 1
-
-        })
-      })
-
-      const sortedRecipes = Object.values(recipeMatches).sort(
-        (a, b) => b.matchCount - a.matchCount
-      )
+      const sortedRecipes = await searchRecipes(ingredients)
 
       setRecipes(sortedRecipes)
 
       if (sortedRecipes.length === 0) {
         setError('No recipes found for your ingredients.')
       }
-
     } catch (error) {
       setError('Unable to load recipes. Please try again.')
       console.error(error)
-
     } finally {
       setLoading(false)
     }
   }
 
+
   const handleViewRecipe = async (recipeId) => {
     setLoadingRecipe(true)
 
     try {
-      const response = await fetch(
-        `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${recipeId}`
-      )
+      const recipe = await fetchRecipeDetails(recipeId)
 
-      const data = await response.json()
-
-      setSelectedRecipe(data.meals?.[0] ?? null)
-
+      setSelectedRecipe(recipe)
     } catch (error) {
       console.error(error)
-
     } finally {
       setLoadingRecipe(false)
     }
@@ -237,7 +185,7 @@ function App() {
 
         <button
           onClick={() => setActiveTab('search')}
-          className={`rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'search'
+          className={`cursor-pointer rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'search'
             ? 'bg-green-600 text-white'
             : 'bg-white text-gray-600 hover:bg-green-100'
             }`}
@@ -247,7 +195,7 @@ function App() {
 
         <button
           onClick={() => setActiveTab('favorites')}
-          className={`rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'favorites'
+          className={`cursor-pointer rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'favorites'
             ? 'bg-green-600 text-white'
             : 'bg-white text-gray-600 hover:bg-green-100'
             }`}
