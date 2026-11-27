@@ -1,16 +1,99 @@
-# React + Vite
+# 🍳 Recipe Finder
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React application that helps users discover recipes based on the ingredients they have available at home.
 
-Currently, two official plugins are available:
+Users can search for recipes, explore ingredient matches, view detailed cooking instructions, and save their favourite recipes for later.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+- **Ingredient Selection:** Search and select ingredients from an available ingredients list.
+- **Recipe Search:** Find recipes based on the selected ingredients.
+- **Ingredient Matching:** See how many of your selected ingredients match each recipe.
+- **Recipe Details:** View recipe ingredients, measurements, and cooking instructions.
+- **Favorites:** Save and remove favourite recipes.
+- **Data Persistence:** Ingredients and favourite recipes are stored using `localStorage`.
+- **Responsive Design:** Interface adapted to different screen sizes.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Technologies
 
-## Expanding the ESLint configuration
+- React
+- JavaScript
+- Tailwind CSS
+- Vite
+- TheMealDB API
+- HTML5
+- CSS3
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📸 Screenshots
+
+*Screenshots coming soon.*
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Make sure you have [Node.js](https://nodejs.org/) and npm installed.
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/RGalrao/recipes_app.git
+   ```
+
+2. Navigate to the project folder:
+
+   ```bash
+   cd recipes_app
+   ```
+
+3. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+4. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open the local URL displayed in your terminal (usually `http://localhost:5173`).
+
+## 🌐 API
+
+This project uses [TheMealDB API](https://www.themealdb.com/api.php) to retrieve ingredient lists, recipe search results, and recipe details.
+
+## 📂 Project Structure
+
+```text
+src/
+├── components/
+│   ├── ingredients/
+│   ├── layout/
+│   └── recipes/
+├── hooks/
+├── services/
+├── App.jsx
+├── index.css
+└── main.jsx
+```
+
+## 📌 Future Improvements
+
+- Add more advanced recipe filtering options.
+- Improve loading and error states.
+- Add recipe sorting options.
+- Improve the overall user experience.
+
+## 👨‍💻 Author
+
+**Rodrigo Galrão**
+
+[GitHub](https://github.com/RGalrao)
+
+---
+
+*Built as a personal project to practise React, JavaScript, API integration, and modern frontend development.*
