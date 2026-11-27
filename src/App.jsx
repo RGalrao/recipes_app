@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from 'react'
+import Navbar from './components/layout/NavBar'
 import { fetchIngredients, searchRecipes, fetchRecipeDetails, fetchFavoriteRecipes } from './services/mealApi'
 import IngredientInput from './components/ingredients/IngredientInput'
 import IngredientList from './components/ingredients/IngredientList'
 import IngredientSelector from './components/ingredients/IngredientSelector'
 import RecipeDetails from './components/recipes/RecipeDetails'
 import RecipeCard from './components/recipes/RecipeCard'
+
 
 function App() {
   const [ingredients, setIngredients] = useState(() => {
@@ -182,32 +184,14 @@ function App() {
         Find recipes with the ingredients you have at home.
       </p>
 
-      <div className="mt-6 flex gap-3">
+      <Navbar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        favoriteCount={favoriteRecipes.length}
+      />
 
-        <button
-          onClick={() => setActiveTab('search')}
-          className={`cursor-pointer rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'search'
-            ? 'bg-green-600 text-white'
-            : 'bg-white text-gray-600 hover:bg-green-100'
-            }`}
-        >
-          Find Recipes
-        </button>
-
-        <button
-          onClick={() => setActiveTab('favorites')}
-          className={`cursor-pointer rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'favorites'
-            ? 'bg-green-600 text-white'
-            : 'bg-white text-gray-600 hover:bg-green-100'
-            }`}
-        >
-          Favorites ({favoriteRecipes.length})
-        </button>
-
-      </div>
       {activeTab === 'search' && (
         <div className="mt-8 w-full max-w-4xl">
-
 
           <div className="mx-auto w-full max-w-4xl">
             <IngredientSelector
