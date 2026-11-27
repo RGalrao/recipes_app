@@ -1,14 +1,18 @@
 
 import { useState, useEffect } from 'react'
-import { fetchIngredients, searchRecipes, fetchRecipeDetails } from './services/mealApi'
+
+import { fetchIngredients, fetchRecipeDetails } from './services/mealApi'
+
 import Navbar from './components/layout/Navbar'
 import IngredientInput from './components/ingredients/IngredientInput'
 import IngredientList from './components/ingredients/IngredientList'
 import IngredientSelector from './components/ingredients/IngredientSelector'
 import RecipeDetails from './components/recipes/RecipeDetails'
 import RecipeCard from './components/recipes/RecipeCard'
+
 import useIngredients from './hooks/useIngredients'
 import useFavorites from './hooks/useFavorites'
+import useRecipes from './hooks/useRecipes'
 
 function App() {
 
@@ -26,9 +30,13 @@ function App() {
     handleToggleFavorite,
   } = useFavorites()
 
-  const [recipes, setRecipes] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const {
+    recipes,
+    loading,
+    error,
+    handleSearchRecipes,
+  } = useRecipes()
+
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [loadingRecipe, setLoadingRecipe] = useState(false)
   const [activeTab, setActiveTab] = useState('search')
@@ -48,31 +56,6 @@ function App() {
 
     loadIngredients()
   }, [])
-
-
-  const handleSearchRecipes = async () => {
-    if (ingredients.length === 0) return
-
-    setLoading(true)
-    setError('')
-    setRecipes([])
-
-    try {
-      const sortedRecipes = await searchRecipes(ingredients)
-
-      setRecipes(sortedRecipes)
-
-      if (sortedRecipes.length === 0) {
-        setError('No recipes found for your ingredients.')
-      }
-    } catch (error) {
-      setError('Unable to load recipes. Please try again.')
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
 
   const handleViewRecipe = async (recipeId) => {
     setLoadingRecipe(true)
@@ -127,7 +110,7 @@ function App() {
 
             <div className="flex justify-center">
               <button
-                onClick={handleSearchRecipes}
+                onClick={() => handleSearchRecipes(ingredients)}
                 disabled={ingredients.length === 0 || loading}
                 className="mt-6 w-full cursor-pointer rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -198,6 +181,13 @@ function App() {
         )
       )}
 
+
+      {loadingRecipe && (
+        <p className="mt-6 text-center text-gray-500">
+          Loading recipe details...
+        </p>
+      )}
+      
       {selectedRecipe && (
         <div className="mt-8 w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-lg">
 
