@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react'
 import { fetchIngredients, searchRecipes, fetchRecipeDetails, fetchFavoriteRecipes } from './services/mealApi'
 import IngredientInput from './components/ingredients/IngredientInput'
 import IngredientList from './components/ingredients/IngredientList'
-import RecipeDetails from './components/recipes/RecipeDetails'
 import IngredientSelector from './components/ingredients/IngredientSelector'
+import RecipeDetails from './components/recipes/RecipeDetails'
+import RecipeCard from './components/recipes/RecipeCard'
 
 function App() {
   const [ingredients, setIngredients] = useState(() => {
@@ -262,104 +263,31 @@ function App() {
       {activeTab === 'search' && recipes.length > 0 && !selectedRecipe && (
         <div className="mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {recipes.map((recipe) => (
-            <div
+            <RecipeCard
               key={recipe.idMeal}
-              className="overflow-hidden rounded-xl bg-white shadow-sm"
-            >
-              <img
-                src={recipe.strMealThumb}
-                alt={recipe.strMeal}
-                className="h-48 w-full object-cover"
-              />
-
-              <div className="p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold text-gray-800">
-                    {recipe.strMeal}
-                  </h3>
-
-                  <button
-                    onClick={() => handleToggleFavorite(recipe.idMeal)}
-                    className="cursor-pointer text-2xl text-red-500 transition hover:scale-110"
-                    title="Add to favorites"
-                  >
-                    {favoriteRecipes.includes(recipe.idMeal) ? '♥' : '♡'}
-                  </button>
-                </div>
-
-                <p className="mt-1 text-sm font-medium text-green-600">
-                  {recipe.matchCount}/{ingredients.length} matches
-                </p>
-
-                <div className="mt-3 flex items-center justify-between gap-2">
-
-                  <span className="text-sm text-black">
-                    {recipe.strArea}
-                  </span>
-
-                  <button
-                    onClick={() => handleViewRecipe(recipe.idMeal)}
-                    className="cursor-pointer rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-                  >
-                    View Recipe
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
+              recipe={recipe}
+              isFavorite={favoriteRecipes.includes(recipe.idMeal)}
+              onToggleFavorite={handleToggleFavorite}
+              onViewRecipe={handleViewRecipe}
+              matchCount={recipe.matchCount}
+              totalIngredients={ingredients.length}
+            />
           ))}
         </div>
       )}
+
       {activeTab === 'favorites' && (
         favoriteRecipeDetails.length > 0 ? (
           <div className="mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
             {favoriteRecipeDetails.map((recipe) => (
-              <div
+              <RecipeCard
                 key={recipe.idMeal}
-                className="overflow-hidden rounded-xl bg-white shadow-sm"
-              >
-                <img
-                  src={recipe.strMealThumb}
-                  alt={recipe.strMeal}
-                  className="h-48 w-full object-cover"
-                />
-
-                <div className="p-4">
-
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-semibold text-gray-800">
-                      {recipe.strMeal}
-                    </h3>
-
-                    <button
-                      onClick={() => handleToggleFavorite(recipe.idMeal)}
-                      className="cursor-pointer text-2xl text-red-500 transition hover:scale-110"
-                      title="Remove from favorites"
-                    >
-                      ♥
-                    </button>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-2">
-
-                    <span className="text-sm text-black">
-                      {recipe.strArea}
-                    </span>
-
-                    <button
-                      onClick={() => handleViewRecipe(recipe.idMeal)}
-                      className="cursor-pointer rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
-                    >
-                      View Recipe
-                    </button>
-
-                  </div>
-
-                </div>
-              </div>
+                recipe={recipe}
+                isFavorite={true}
+                onToggleFavorite={handleToggleFavorite}
+                onViewRecipe={handleViewRecipe}
+              />
             ))}
 
           </div>
