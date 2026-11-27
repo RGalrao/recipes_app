@@ -12,16 +12,64 @@ function App() {
   })
 
   const [recipes, setRecipes] = useState([])
+
+  const [favoriteRecipes, setFavoriteRecipes] = useState(() => {
+    const savedFavorites = localStorage.getItem('favorites')
+
+    return savedFavorites ? JSON.parse(savedFavorites) : []
+  })
+
+  const [favoriteRecipeDetails, setFavoriteRecipeDetails] = useState([])
+
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [selectedRecipe, setSelectedRecipe] = useState(null)
   const [loadingRecipe, setLoadingRecipe] = useState(false)
 
+  const [activeTab, setActiveTab] = useState('search')
+
   useEffect(() => {
     localStorage.setItem('ingredients', JSON.stringify(ingredients))
   }, [ingredients])
 
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favoriteRecipes))
+  }, [favoriteRecipes])
 
+  useEffect(() => {
+    const fetchFavoriteDetails = async () => {
+      if (favoriteRecipes.length === 0) {
+        setFavoriteRecipeDetails([])
+        return
+      }
+
+      try {
+        const responses = await Promise.all(
+          favoriteRecipes.map((recipeId) =>
+            fetch(
+              `https://www.themealdb.com/api/json/v1/1/lookup.php?i=${recipeId}`
+            )
+          )
+        )
+
+        const results = await Promise.all(
+          responses.map((response) => response.json())
+        )
+
+        const favoriteMeals = results
+          .map((result) => result.meals?.[0])
+          .filter(Boolean)
+
+        setFavoriteRecipeDetails(favoriteMeals)
+
+      } catch (error) {
+        console.error('Unable to load favorite recipes:', error)
+      }
+    }
+
+    fetchFavoriteDetails()
+  }, [favoriteRecipes])
   const handleAddIngredient = (newIngredient) => {
     const alreadyExists = ingredients.some(
       (ingredient) =>
@@ -43,6 +91,16 @@ function App() {
 
   const handleClearIngredients = () => {
     setIngredients([])
+  }
+
+  const handleToggleFavorite = (recipeId) => {
+    setFavoriteRecipes((previousFavorites) => {
+      if (previousFavorites.includes(recipeId)) {
+        return previousFavorites.filter((id) => id !== recipeId)
+      }
+
+      return [...previousFavorites, recipeId]
+    })
   }
 
   const handleSearchRecipes = async () => {
@@ -137,38 +195,64 @@ function App() {
         Find recipes with the ingredients you have at home.
       </p>
 
-      <div className="mt-8 w-full max-w-4xl">
+      <div className="mt-6 flex gap-3">
 
-        <div className="mx-auto w-full max-w-lg">
-          <IngredientInput onAddIngredient={handleAddIngredient} />
+        <button
+          onClick={() => setActiveTab('search')}
+          className={`rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'search'
+            ? 'bg-green-600 text-white'
+            : 'bg-white text-gray-600 hover:bg-green-100'
+            }`}
+        >
+          Find Recipes
+        </button>
 
-          <div className="flex justify-center">
-            <button
-              onClick={handleSearchRecipes}
-              disabled={ingredients.length === 0 || loading}
-              className="mt-6 w-full cursor-pointer rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? 'Searching...' : 'Find Recipes'}
-            </button>
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveTab('favorites')}
+          className={`rounded-lg px-5 py-2 font-semibold transition ${activeTab === 'favorites'
+            ? 'bg-green-600 text-white'
+            : 'bg-white text-gray-600 hover:bg-green-100'
+            }`}
+        >
+          Favorites ({favoriteRecipes.length})
+        </button>
 
-        <IngredientList
-          ingredients={ingredients}
-          onRemoveIngredient={handleRemoveIngredient}
-        />
-
-        {ingredients.length > 0 && (
-          <div className="mt-3 flex justify-center">
-            <button
-              onClick={handleClearIngredients}
-              className="cursor-pointer text-sm font-medium text-red-500 transition hover:text-red-700"
-            >
-              Clear All
-            </button>
-          </div>
-        )}
       </div>
+      {activeTab === 'search' && (
+        <div className="mt-8 w-full max-w-4xl">
+
+
+          <div className="mx-auto w-full max-w-lg">
+            <IngredientInput onAddIngredient={handleAddIngredient} />
+
+            <div className="flex justify-center">
+              <button
+                onClick={handleSearchRecipes}
+                disabled={ingredients.length === 0 || loading}
+                className="mt-6 w-full cursor-pointer rounded-lg bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading ? 'Searching...' : 'Find Recipes'}
+              </button>
+            </div>
+          </div>
+
+          <IngredientList
+            ingredients={ingredients}
+            onRemoveIngredient={handleRemoveIngredient}
+          />
+
+          {ingredients.length > 0 && (
+            <div className="mt-3 flex justify-center">
+              <button
+                onClick={handleClearIngredients}
+                className="cursor-pointer text-sm font-medium text-red-500 transition hover:text-red-700"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && (
         <p className="mt-6 text-center text-red-500">
@@ -176,7 +260,7 @@ function App() {
         </p>
       )}
 
-      {recipes.length > 0 && !selectedRecipe && (
+      {activeTab === 'search' && recipes.length > 0 && !selectedRecipe && (
         <div className="mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {recipes.map((recipe) => (
             <div
@@ -190,9 +274,19 @@ function App() {
               />
 
               <div className="p-4">
-                <h3 className="font-semibold text-gray-800">
-                  {recipe.strMeal}
-                </h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold text-gray-800">
+                    {recipe.strMeal}
+                  </h3>
+
+                  <button
+                    onClick={() => handleToggleFavorite(recipe.idMeal)}
+                    className="cursor-pointer text-2xl text-red-500 transition hover:scale-110"
+                    title="Add to favorites"
+                  >
+                    {favoriteRecipes.includes(recipe.idMeal) ? '♥' : '♡'}
+                  </button>
+                </div>
 
                 <p className="mt-1 text-sm font-medium text-green-600">
                   {recipe.matchCount}/{ingredients.length} matches
@@ -218,6 +312,63 @@ function App() {
             </div>
           ))}
         </div>
+      )}
+      {activeTab === 'favorites' && (
+        favoriteRecipeDetails.length > 0 ? (
+          <div className="mt-8 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+            {favoriteRecipeDetails.map((recipe) => (
+              <div
+                key={recipe.idMeal}
+                className="overflow-hidden rounded-xl bg-white shadow-sm"
+              >
+                <img
+                  src={recipe.strMealThumb}
+                  alt={recipe.strMeal}
+                  className="h-48 w-full object-cover"
+                />
+
+                <div className="p-4">
+
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-semibold text-gray-800">
+                      {recipe.strMeal}
+                    </h3>
+
+                    <button
+                      onClick={() => handleToggleFavorite(recipe.idMeal)}
+                      className="cursor-pointer text-2xl text-red-500 transition hover:scale-110"
+                      title="Remove from favorites"
+                    >
+                      ♥
+                    </button>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-2">
+
+                    <span className="text-sm text-black">
+                      {recipe.strArea}
+                    </span>
+
+                    <button
+                      onClick={() => handleViewRecipe(recipe.idMeal)}
+                      className="cursor-pointer rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                    >
+                      View Recipe
+                    </button>
+
+                  </div>
+
+                </div>
+              </div>
+            ))}
+
+          </div>
+        ) : (
+          <p className="mt-8 text-center text-gray-500">
+            You haven't saved any favorite recipes yet.
+          </p>
+        )
       )}
 
       {selectedRecipe && (
